@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Speech to Text with POS Tagging</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('image.png');
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      
+    }
+
+
+  
+    .container {
+      background: rgba(255, 239, 239, 0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 40px 50px;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 420px;
+      border: 2px solid rgba(255, 251, 0, 0.4);
+      animation: fadeIn 0.6s ease-in-out;
+    }
+  
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  
+    h2 {
+      margin-bottom: 25px;
+      color: #ffffff;
+      font-size: 26px;
+      font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      background: linear-gradient(90deg, #ffffff, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  
+    button {
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #38ef7d, #11998e);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+  
+    button:hover {
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      transform: scale(1.05);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+  
+    .label {
+      font-weight: 600;
+      margin-top: 22px;
+      color: #ffffff;
+      text-align: left;
+      font-size: 15px;
+      transition: color 0.3s ease;
+    }
+  
+    #result, #tags {
+      background-color: rgba(255, 255, 255, 0.35);
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      color: #2c3e50;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+    }
+  
+    #result:focus, #tags:focus {
+      outline: none;
+      background-color: rgba(255, 255, 255, 0.45);
+      box-shadow: 0 0 8px rgba(0, 140, 186, 0.3);
+    }
+  </style>
+  
+  
+  
+</head>
+<body>
+
+  
+  
+  <div class="container">
+    <h2>Speech to Text POS Tagging</h2>
+    <p style="color: #f0ff68; font-size: 18px; margin-bottom: 10px; padding:2px;">
+      Convert your voice to text and break it down with intelligent POS tagging.
+    </p>
+    <button onclick="startRecognition()">🎤 Start Speaking</button>
+
+    <div class="label">Recognized Text:</div>
+    <div id="result">-</div>
+
+    <div class="label">POS Tags:</div>
+    <pre id="tags">-</pre>
+  </div>
+
+  
+
+ <script>
+  function startRecognition() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-US";
+
+    recognition.onresult = async function(event) {
+      const text = event.results[0][0].transcript;
+      document.getElementById("result").innerText = text;
+
+      try {
+        const res = await fetch("http://localhost:5000/tag", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await res.json();
+        console.log("POS tags received:", data.tags); 
+        document.getElementById("tags").innerText = JSON.stringify(data.tags, null, 2);
+      } catch (err) {
+        console.error("Error calling backend:", err);
+        document.getElementById("tags").innerText = "Error fetching POS tags.";
+      }
+    };
+
+    recognition.onerror = function(event) {
+      console.error("Speech recognition error:", event.error);
+    };
+
+    recognition.start();
+  }
+</script>
+
+
+
+
+</body>
+</html>
